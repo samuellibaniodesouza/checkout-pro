@@ -59,6 +59,7 @@ function getMercadoPagoErrorMessage(error: unknown) {
       message?: string;
       cause?: Array<{ description?: string; message?: string; code?: string }>;
       error?: string;
+      status?: number;
     };
 
     const causeMessage = maybeError.cause
@@ -70,6 +71,18 @@ function getMercadoPagoErrorMessage(error: unknown) {
   }
 
   return "Erro desconhecido.";
+}
+
+function getMercadoPagoErrorStatus(error: unknown) {
+  if (typeof error === "object" && error !== null && "status" in error) {
+    const status = Number((error as { status?: unknown }).status);
+
+    if (status >= 400 && status < 500) {
+      return 400;
+    }
+  }
+
+  return 500;
 }
 
 export async function POST(request: Request) {
@@ -201,6 +214,7 @@ export async function POST(request: Request) {
       }
 
       const installments = paymentMethod === "CARTAO_DEBITO" ? 1 : Number(body.installments || 1);
+      const issuerId = body.issuerId ? Number(body.issuerId) : undefined;
 
       const payment = await paymentClient.create({
         body: {
@@ -208,7 +222,7 @@ export async function POST(request: Request) {
           token: String(body.cardToken),
           installments,
           payment_method_id: String(body.cardPaymentMethodId),
-          issuer_id: body.issuerId ? String(body.issuerId) : undefined,
+          issuer_id: Number.isFinite(issuerId) ? issuerId : undefined,
         } as any,
       });
 
@@ -234,7 +248,7 @@ export async function POST(request: Request) {
         error: "Erro ao criar pagamento no Mercado Pago.",
         details,
       },
-      { status: 500 }
+      { status: getMercadoPagoErrorStatus(error) }
     );
   }
 }

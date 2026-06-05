@@ -61,12 +61,40 @@ type MetaWindow = Window & {
   _fbq?: MetaFbq;
 };
 
+
+type MercadoPagoListResponse<T> =
+  | T[]
+  | {
+      results?: T[];
+      paging?: unknown;
+    };
+
+type MercadoPagoPaymentMethod = {
+  id?: string;
+  payment_method_id?: string;
+  name?: string;
+  payment_type_id?: string;
+};
+
+type MercadoPagoIssuer = {
+  id?: string | number;
+  name?: string;
+};
+
+type CardTokenResult = {
+  token: string;
+  paymentMethodId: string;
+  issuerId?: string;
+};
+
 declare global {
   interface Window {
     fbq?: (...args: unknown[]) => void;
     _fbq?: unknown;
     MercadoPago?: new (publicKey: string, options?: Record<string, unknown>) => {
       createCardToken: (cardData: Record<string, string>) => Promise<{ id?: string; error?: unknown; message?: string }>;
+      getPaymentMethods?: (params: { bin: string }) => Promise<unknown>;
+      getIssuers?: (params: { paymentMethodId: string; bin?: string }) => Promise<unknown>;
     };
   }
 }
@@ -207,7 +235,7 @@ async function createCardTokenByRestApi(publicKey: string, card: {
   expirationYear: string;
   securityCode: string;
   customerCpf: string;
-}) {
+}, fallbackPaymentMethodId: string): Promise<CardTokenResult> {
   const response = await fetch(
     `https://api.mercadopago.com/v1/card_tokens?public_key=${encodeURIComponent(publicKey)}`,
     {
@@ -244,7 +272,78 @@ async function createCardTokenByRestApi(publicKey: string, card: {
     );
   }
 
-  return String(data.id);
+  return {
+    token: String(data.id),
+    paymentMethodId: fallbackPaymentMethodId,
+  };
+}
+
+function getFirstMercadoPagoResult<T>(response: MercadoPagoListResponse<T> | unknown): T | null {
+  if (Array.isArray(response)) {
+    return response[0] || null;
+  }
+
+  if (typeof response === "object" && response !== null && "results" in response) {
+    const results = (response as { results?: T[] }).results;
+    return results?.[0] || null;
+  }
+
+  return null;
+}
+
+type MercadoPagoInstance = {
+  createCardToken: (cardData: Record<string, string>) => Promise<{ id?: string; error?: unknown; message?: string }>;
+  getPaymentMethods?: (params: { bin: string }) => Promise<unknown>;
+  getIssuers?: (params: { paymentMethodId: string; bin?: string }) => Promise<unknown>;
+};
+
+async function getCardPaymentInfo(params: {
+  mercadoPago: MercadoPagoInstance;
+  cardNumber: string;
+  fallbackPaymentMethodId: string;
+  paymentMethod: string;
+}) {
+  const bin = params.cardNumber.replace(/\D/g, "").slice(0, 6);
+
+  if (bin.length < 6 || !params.mercadoPago.getPaymentMethods) {
+    return {
+      paymentMethodId: params.fallbackPaymentMethodId,
+      issuerId: undefined,
+    };
+  }
+
+  const paymentMethodsResponse = await params.mercadoPago.getPaymentMethods({ bin });
+  const detectedMethod = getFirstMercadoPagoResult<MercadoPagoPaymentMethod>(
+    paymentMethodsResponse
+  );
+
+  const detectedPaymentMethodId =
+    detectedMethod?.id || detectedMethod?.payment_method_id || params.fallbackPaymentMethodId;
+
+  const paymentMethodId =
+    params.paymentMethod === "CARTAO_DEBITO" && !detectedPaymentMethodId.startsWith("deb")
+      ? params.fallbackPaymentMethodId
+      : detectedPaymentMethodId;
+
+  let issuerId: string | undefined;
+
+  if (params.mercadoPago.getIssuers) {
+    const issuersResponse = await params.mercadoPago.getIssuers({
+      paymentMethodId,
+      bin,
+    });
+
+    const issuer = getFirstMercadoPagoResult<MercadoPagoIssuer>(issuersResponse);
+
+    if (issuer?.id !== undefined && issuer?.id !== null) {
+      issuerId = String(issuer.id);
+    }
+  }
+
+  return {
+    paymentMethodId,
+    issuerId,
+  };
 }
 
 async function createMercadoPagoCardToken(card: {
@@ -254,7 +353,9 @@ async function createMercadoPagoCardToken(card: {
   expirationYear: string;
   securityCode: string;
   customerCpf: string;
-}) {
+  fallbackPaymentMethodId: string;
+  paymentMethod: string;
+}): Promise<CardTokenResult> {
   const publicKey = await getMercadoPagoPublicKey();
 
   try {
@@ -265,6 +366,13 @@ async function createMercadoPagoCardToken(card: {
     }
 
     const mercadoPago = new window.MercadoPago(publicKey, { locale: "pt-BR" });
+
+    const cardPaymentInfo = await getCardPaymentInfo({
+      mercadoPago,
+      cardNumber: card.cardNumber,
+      fallbackPaymentMethodId: card.fallbackPaymentMethodId,
+      paymentMethod: card.paymentMethod,
+    });
 
     const token = await mercadoPago.createCardToken({
       cardNumber: card.cardNumber.replace(/\D/g, ""),
@@ -278,7 +386,11 @@ async function createMercadoPagoCardToken(card: {
     });
 
     if (token.id) {
-      return token.id;
+      return {
+        token: token.id,
+        paymentMethodId: cardPaymentInfo.paymentMethodId,
+        issuerId: cardPaymentInfo.issuerId,
+      };
     }
 
     console.error("MercadoPago.js não retornou token:", token);
@@ -289,7 +401,7 @@ async function createMercadoPagoCardToken(card: {
     );
   } catch (error) {
     console.error("Falha ao gerar token pelo SDK MercadoPago.js. Tentando fallback REST:", error);
-    return createCardTokenByRestApi(publicKey, card);
+    return createCardTokenByRestApi(publicKey, card, card.fallbackPaymentMethodId);
   }
 }
 
@@ -579,16 +691,18 @@ export default function CheckoutClient({ product }: CheckoutClientProps) {
     const orderData = await orderResponse.json();
 
     try {
-      let cardToken: string | undefined;
+      let cardPayment: CardTokenResult | undefined;
 
       if (["CARTAO_CREDITO", "CARTAO_DEBITO"].includes(form.paymentMethod)) {
-        cardToken = await createMercadoPagoCardToken({
+        cardPayment = await createMercadoPagoCardToken({
           cardNumber: form.cardNumber,
           cardholderName: form.cardholderName || form.customerName,
           expirationMonth: form.cardExpirationMonth,
           expirationYear: form.cardExpirationYear,
           securityCode: form.cardSecurityCode,
           customerCpf: form.customerCpf,
+          fallbackPaymentMethodId: form.cardPaymentMethodId,
+          paymentMethod: form.paymentMethod,
         });
       }
 
@@ -605,8 +719,9 @@ export default function CheckoutClient({ product }: CheckoutClientProps) {
           customerCpf: form.customerCpf,
           productName: productNameWithBump,
           amount: total,
-          cardToken,
-          cardPaymentMethodId: form.cardPaymentMethodId,
+          cardToken: cardPayment?.token,
+          cardPaymentMethodId: cardPayment?.paymentMethodId || form.cardPaymentMethodId,
+          issuerId: cardPayment?.issuerId,
           installments: form.installments,
           address: {
             zipCode: form.boletoZipCode,
