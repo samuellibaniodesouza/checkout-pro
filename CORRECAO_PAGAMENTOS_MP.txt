@@ -1,0 +1,25 @@
+CORRECAO APLICADA - MERCADO PAGO
+
+1. app/api/payments/route.ts
+- PIX e Cartao foram separados.
+- PIX usa payment_method_id: "pix" e retorna QR Code.
+- Cartao nao gera mais QR Code PIX.
+- Cartao agora exige token seguro do Mercado Pago: cardToken, cardPaymentMethodId, installments e issuerId.
+- Erro do Mercado Pago agora retorna details para facilitar debug.
+- orderId agora vai como external_reference.
+
+2. app/checkout/[slug]/CheckoutClient.tsx
+- Envia paymentMethod e orderId para /api/payments.
+- Se selecionar Cartao, nao redireciona mais para obrigado com PIX antigo.
+- Mostra aviso explicando que falta ligar o formulario seguro de cartao.
+
+3. app/page.tsx
+- Mesma protecao aplicada no checkout principal.
+
+4. app/upsell/[orderId]/UpsellClient.tsx
+- Envia paymentMethod PIX e orderId para /api/payments.
+
+IMPORTANTE
+- PIX: pronto para testar novamente.
+- Cartao: backend separado/pronto, mas ainda falta implementar o CardForm/MercadoPago.js no frontend para gerar o token seguro do cartao.
+- Isso corrige o bug de Cartao gerar QR Code PIX.

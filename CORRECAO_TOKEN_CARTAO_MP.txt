@@ -1,0 +1,19 @@
+CORREÇÃO APLICADA - TOKEN DO CARTÃO MERCADO PAGO
+
+Problema encontrado:
+- O checkout criava o pedido e buscava a Public Key, mas não chegava a chamar /api/payments.
+- Isso indicava falha no frontend durante a geração do token seguro do cartão.
+
+Correção:
+- Mantido o fluxo de PIX, boleto, order bump, cupom, upsell e Meta Pixel.
+- Melhorado o tratamento de erro no CheckoutClient.tsx.
+- Adicionado console.error detalhado para enxergar o erro real no F12.
+- Adicionado fallback seguro de tokenização direto na API pública de card_tokens do Mercado Pago usando a Public Key.
+- Os dados do cartão continuam NÃO sendo enviados para o backend do checkout; o backend recebe apenas o cardToken.
+
+Próximo teste:
+1. npm run dev
+2. Abrir checkout
+3. Selecionar cartão
+4. Usar cartão de teste do Mercado Pago
+5. Conferir se agora aparece POST /api/payments no Network

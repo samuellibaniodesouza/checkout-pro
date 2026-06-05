@@ -1,0 +1,26 @@
+CONFIGURAÇÕES DE PAGAMENTO / PIX
+
+Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-payment-settings
+npx prisma generate
+npm run dev
+
+Acesse:
+
+http://localhost:3000/painel/pagamentos
+
+IMPORTANTE:
+Para o PIX cair na sua conta, o Access Token precisa ser da sua conta Mercado Pago.
+Se usar token de teste, o pagamento será de teste.
+Se usar token de produção, o PIX será real e deve cair na conta Mercado Pago dona do token.
+
+Teste final recomendado:
+1. Configure Mercado Pago em /painel/pagamentos
+2. Configure NEXT_PUBLIC_SITE_URL no .env
+3. Faça uma compra teste
+4. Gere PIX
+5. Pague o PIX real somente quando tiver certeza que está em produção
+6. Verifique se caiu no Mercado Pago
+7. Verifique se webhook marcou pedido como pago
+8. Verifique se e-mail chegou

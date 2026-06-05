@@ -1,0 +1,20 @@
+ÁREA DE MEMBROS PREMIUM
+
+Este pacote melhora a página:
+/area-de-download/[orderId]
+
+Inclui:
+- Header premium estilo área de membros
+- Boas-vindas com nome do cliente
+- Status de acesso
+- Card do produto comprado
+- Seção Produto principal
+- Seção Módulos
+- Seção Bônus
+- Upsell preservado
+- Melhor responsividade mobile
+
+Não precisa rodar migration.
+Basta substituir os arquivos e rodar:
+
+npm run dev

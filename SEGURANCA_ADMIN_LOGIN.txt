@@ -1,0 +1,34 @@
+SEGURANÇA ADMIN + LOGIN/CADASTRO
+
+Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-admin-auth
+npx prisma generate
+npm run dev
+
+Fluxo:
+1. Acesse http://localhost:3000/cadastro
+2. Crie o primeiro administrador
+3. Depois disso, /cadastro fica bloqueado
+4. Use /login para entrar
+5. Use /recuperar-senha para recuperação
+6. Use /logout para sair
+
+Proteções adicionadas:
+- /painel protegido por sessão
+- APIs sensíveis protegidas por sessão
+- Botão de zerar banco exige login
+- Configurações de pagamento/integracões exigem login
+- Sessão via cookie httpOnly
+- Senha com PBKDF2 + salt
+- Recuperação por token com expiração
+
+IMPORTANTE:
+Antes de subir ao Railway, rode essa migration.
+Configure no Railway:
+NEXT_PUBLIC_SITE_URL=https://seu-dominio.com
+RESEND_API_KEY=sua_chave
+EMAIL_FROM=Seu Nome <email@seudominio.com>
+
+Para Android/app:
+Este sistema já fica preparado para virar PWA/app depois, porque agora tem login real.

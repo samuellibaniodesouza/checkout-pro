@@ -1,0 +1,15 @@
+RELATÓRIO DE CUPONS
+
+Este pacote adiciona:
+- Receita por cupom em /painel/cupons
+- Desconto total por cupom
+- Pedidos pagos por cupom
+- Cupom campeão
+- Métricas no dashboard executivo
+
+Se você já rodou a migration add-coupons antes, não precisa rodar outra migration.
+Caso ainda não tenha rodado, execute:
+
+npx prisma migrate dev --name add-coupons
+npx prisma generate
+npm run dev

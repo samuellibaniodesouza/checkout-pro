@@ -1,0 +1,33 @@
+CORREÇÃO APLICADA - MERCADO PAGO COMPLETO
+
+1. API pública criada:
+- app/api/public/mercado-pago-key/route.ts
+- Ela expõe somente a Public Key, necessária no navegador para gerar o token seguro do cartão.
+
+2. API de pagamento corrigida:
+- app/api/payments/route.ts
+- PIX: usa payment_method_id pix.
+- BOLETO: usa payment_method_id bolbradesco e exige endereço completo.
+- CARTÃO DE CRÉDITO: usa token seguro MercadoPago.js + payment_method_id da bandeira.
+- CARTÃO DE DÉBITO: usa token seguro MercadoPago.js + payment_method_id de débito.
+
+3. Checkout por produto atualizado:
+- app/checkout/[slug]/CheckoutClient.tsx
+- Inclui as formas:
+  * PIX
+  * Cartão de crédito
+  * Cartão de débito
+  * Boleto bancário
+- Cartão agora cria token seguro no frontend com MercadoPago.js.
+- Dados do cartão não são salvos no banco.
+
+4. Página obrigado atualizada:
+- app/obrigado/page.tsx
+- Agora mostra PIX, boleto ou status do cartão.
+
+IMPORTANTE:
+- PIX já foi validado pelo usuário.
+- Cartão precisa de Public Key correta salva em /painel/pagamentos.
+- Boleto precisa de dados de endereço reais.
+- Cartão real/teste precisa usar cartões de teste oficiais do Mercado Pago.
+- O webhook continua sendo responsável por marcar pedido como pago, enviar e-mail, liberar área de download e enviar Purchase Meta.

@@ -1,0 +1,21 @@
+CONFIGURAÇÕES DO CHECKOUT
+
+Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-checkout-settings
+npx prisma generate
+npm run dev
+
+Acesse:
+
+http://localhost:3000/painel/configuracoes
+
+O que foi adicionado:
+- Configurações gerais do checkout
+- Editor do título
+- Editor do subtítulo
+- Editor do texto do botão
+- Editor do texto de garantia
+- Editor de cores
+- Editor do Order Bump
+- Order Bump editável no checkout

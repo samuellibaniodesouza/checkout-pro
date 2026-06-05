@@ -1,0 +1,24 @@
+CENTRAL DE E-MAILS
+
+Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-email-templates
+npx prisma generate
+npm run dev
+
+Acesse:
+
+http://localhost:3000/painel/emails
+
+Inclui:
+- Templates editáveis
+- Acesso liberado
+- Recuperação 1, 2 e 3
+- Oferta complementar
+- Envio de teste via Resend
+
+Para enviar e-mail real, configure no .env:
+
+RESEND_API_KEY=sua_chave
+EMAIL_FROM=Seu Nome <email@seudominio.com>
+NEXT_PUBLIC_SITE_URL=https://seusite.com

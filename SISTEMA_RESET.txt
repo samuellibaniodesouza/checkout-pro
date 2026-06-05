@@ -1,0 +1,39 @@
+CONFIGURAÇÕES GERAIS + RESET DO BANCO
+
+Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-app-settings
+npx prisma generate
+npm run dev
+
+Acesse:
+
+http://localhost:3000/painel/sistema
+
+Inclui:
+- Nome da empresa
+- E-mail suporte
+- WhatsApp suporte
+- Logo URL
+- Rodapé
+- Zona de perigo para apagar dados
+
+Modos de limpeza:
+1) Apagar apenas dados de teste:
+   - pedidos
+   - leads
+   - gastos
+
+2) Zerar banco inteiro:
+   - pedidos
+   - leads
+   - gastos
+   - cupons
+   - produtos
+   - arquivos
+   - templates de e-mail
+   - configurações
+
+Segurança:
+- Precisa digitar ZERAR
+- Tem confirmação extra no navegador

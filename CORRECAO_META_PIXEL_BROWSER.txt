@@ -1,0 +1,19 @@
+CORREÇÃO META PIXEL BROWSER
+
+Corrigido:
+- Checkout agora carrega o script oficial da Meta: fbevents.js
+- PageView dispara ao abrir checkout
+- InitiateCheckout dispara ao gerar PIX
+- Usa Pixel ID do produto primeiro
+- Se produto não tiver Pixel, usa Pixel geral salvo em /painel/integracoes
+- Não expõe Access Token
+
+Depois de substituir:
+npm run dev
+
+Teste:
+1. Abra o checkout
+2. Abra Meta Pixel Helper
+3. Deve aparecer PageView
+4. Gere PIX
+5. Deve aparecer InitiateCheckout

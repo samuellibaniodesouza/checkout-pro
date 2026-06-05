@@ -1,0 +1,22 @@
+RECUPERAÇÃO AUTOMÁTICA DE LEADS
+
+1) Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-lead-recovery-fields
+npx prisma generate
+npm run dev
+
+2) Teste localmente abrindo:
+
+http://localhost:3000/api/leads/auto-recover
+
+Essa rota verifica os leads abandonados e envia e-mails conforme o tempo:
+- 30 minutos: recuperação 1
+- 2 horas: recuperação 2
+- 24 horas: recuperação 3
+
+3) No Railway, configure um Cron/Job para chamar essa rota a cada 10 ou 15 minutos.
+
+Importante:
+- Precisa ter RESEND_API_KEY no .env para enviar e-mail.
+- Precisa ter NEXT_PUBLIC_SITE_URL no .env para gerar o link correto do checkout.

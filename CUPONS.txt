@@ -1,0 +1,21 @@
+SISTEMA DE CUPONS
+
+Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-coupons
+npx prisma generate
+npm run dev
+
+Acesse:
+
+http://localhost:3000/painel/cupons
+
+No checkout, o cliente poderá digitar o cupom e o total será recalculado.
+Tipos:
+- Percentual (%)
+- Valor fixo (R$)
+
+O sistema também:
+- verifica validade
+- verifica limite de uso
+- incrementa usado quando o pedido é criado

@@ -1,0 +1,30 @@
+WEBHOOK MERCADO PAGO COMPLETO
+
+Arquivo principal:
+app/api/webhooks/mercado-pago/route.ts
+
+O que faz:
+- Recebe notificação do Mercado Pago
+- Busca o pagamento real pelo ID
+- Encontra o pedido pelo gatewayPaymentId
+- Atualiza paymentStatus para paid/cancelled/pending
+- Envia e-mail de acesso automaticamente
+- Evita envio duplicado de e-mail
+- Envia Purchase para Meta Pixel se configurado
+- Evita Purchase duplicado
+- Marca leads relacionados como converted
+
+URL local de teste:
+http://localhost:3000/api/webhooks/mercado-pago
+
+URL no Railway:
+https://SEU-DOMINIO.up.railway.app/api/webhooks/mercado-pago
+
+No Mercado Pago, configure esta URL como webhook para pagamentos.
+
+Variáveis importantes no .env:
+NEXT_PUBLIC_SITE_URL=https://seu-dominio.com
+RESEND_API_KEY=sua_chave
+EMAIL_FROM=Seu Nome <email@seudominio.com>
+META_ACCESS_TOKEN=seu_token_meta
+META_GRAPH_VERSION=v21.0

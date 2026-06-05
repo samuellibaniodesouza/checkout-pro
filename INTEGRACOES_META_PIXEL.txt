@@ -1,0 +1,26 @@
+INTEGRAÇÕES / META PIXEL
+
+Depois de substituir os arquivos, rode:
+
+npx prisma migrate dev --name add-integration-settings
+npx prisma generate
+npm run dev
+
+Acesse:
+
+http://localhost:3000/painel/integracoes
+
+Inclui:
+- Pixel ID
+- Access Token da Meta
+- Graph Version
+- Código de teste da Meta
+- Botão para testar Purchase pela Conversions API
+
+Para testar:
+1. Abra o Gerenciador de Eventos da Meta
+2. Vá em Eventos de teste
+3. Copie o código de teste
+4. Cole no painel /painel/integracoes
+5. Clique em Testar Purchase Meta
+6. Veja se o evento aparece na Meta
