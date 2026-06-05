@@ -22,15 +22,19 @@ async function getCouponsWithMetrics() {
     },
   });
 
-  return coupons.map((coupon) => {
+  return coupons.map((coupon: { code: string }) => {
     const couponOrders = paidOrdersWithCoupon.filter(
-      (order) => order.couponCode === coupon.code
+      (order: { couponCode: string | null }) => order.couponCode === coupon.code
     );
 
-    const revenue = couponOrders.reduce((sum, order) => sum + order.amount, 0);
+    const revenue = couponOrders.reduce(
+      (sum: number, order: { amount: number }) => sum + order.amount,
+      0
+    );
 
     const discountTotal = couponOrders.reduce(
-      (sum, order) => sum + Number(order.couponDiscount || 0),
+      (sum: number, order: { couponDiscount: number }) =>
+        sum + Number(order.couponDiscount || 0),
       0
     );
 
