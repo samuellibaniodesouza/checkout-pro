@@ -1,0 +1,251 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  price       Float
+  imageUrl    String?
+  fileUrl     String?
+  metaPixelId String?
+  upsellHeadline String?
+  upsellBenefits String?
+  isActive    Boolean  @default(true)
+
+  upsellEnabled Boolean @default(false)
+  upsellProductId String?
+  upsellProduct Product? @relation("ProductUpsell", fields: [upsellProductId], references: [id])
+  usedAsUpsellFor Product[] @relation("ProductUpsell")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]
+  files       ProductFile[]
+}
+
+model ProductFile {
+  id          String   @id @default(cuid())
+
+  productId   String
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+  fileUrl     String
+  type        String   @default("main")
+  sortOrder   Int      @default(1)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id               String   @id @default(cuid())
+
+  customerName     String
+  customerEmail    String
+  customerPhone    String
+  customerCpf      String
+
+  productName      String
+  productId        String?
+  product          Product? @relation(fields: [productId], references: [id])
+
+  amount           Float
+
+  paymentMethod    String
+  paymentStatus    String   @default("pending")
+
+  orderBump        Boolean  @default(false)
+
+  gatewayPaymentId String?
+
+  couponCode      String?
+  couponDiscount  Float    @default(0)
+
+  metaPurchaseSent   Boolean   @default(false)
+  metaPurchaseSentAt DateTime?
+
+  emailSent   Boolean   @default(false)
+  emailSentAt DateTime?
+
+  isUpsellOrder Boolean @default(false)
+  parentOrderId String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  title       String
+  category    String
+  amount      Float
+  notes       String?
+  expenseDate DateTime @default(now())
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  customerCpf    String?
+
+  productId      String?
+  productName    String
+  productSlug    String?
+
+  status         String   @default("abandoned")
+  source         String   @default("checkout")
+
+  convertedOrderId String?
+  notes          String?
+
+  recoveryEmail1SentAt DateTime?
+  recoveryEmail2SentAt DateTime?
+  recoveryEmail3SentAt DateTime?
+  lastRecoverySentAt   DateTime?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CheckoutSettings {
+  id                    String   @id @default("default")
+
+  checkoutTitle         String   @default("Finalize sua compra com segurança")
+  checkoutSubtitle      String   @default("Produto digital com acesso após confirmação do pagamento.")
+  checkoutButtonText    String   @default("Comprar agora com segurança")
+  checkoutGuaranteeText String   @default("Seus dados estão protegidos. Não armazenamos dados de cartão.")
+
+  primaryColor          String   @default("#16a34a")
+  secondaryColor        String   @default("#7e22ce")
+
+  orderBumpEnabled      Boolean  @default(true)
+  orderBumpName         String   @default("Kit Fornecedores Premium")
+  orderBumpDescription  String   @default("Receba uma lista prática com fornecedores, ideias de compra de matéria-prima e caminhos para começar vendendo mais rápido.")
+  orderBumpPrice        Float    @default(9.90)
+  orderBumpOldPrice     Float    @default(19.90)
+  orderBumpBadge        String   @default("Oferta rápida")
+  orderBumpButtonText   String   @default("adicionar ao pedido")
+  orderBumpBenefits     String   @default("Lista de fornecedores\nMatérias-primas\nIdeias para revenda\nAcesso imediato")
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Coupon {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  type        String   @default("percent")
+  value       Float
+  isActive    Boolean  @default(true)
+
+  usageLimit  Int?
+  usedCount   Int      @default(0)
+  expiresAt   DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  subject     String
+  headline    String
+  body        String
+  buttonText  String
+  footer      String?
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PaymentSettings {
+  id                   String   @id @default("default")
+
+  provider             String   @default("mercado_pago")
+  environment          String   @default("test")
+
+  mercadoPagoAccessToken String?
+  mercadoPagoPublicKey   String?
+  mercadoPagoAccountEmail String?
+  receiverName          String?
+
+  manualPixEnabled      Boolean  @default(false)
+  manualPixKey          String?
+  manualPixKeyType      String?
+  manualPixReceiverName String?
+  manualPixBankName     String?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model IntegrationSettings {
+  id              String   @id @default("default")
+
+  metaPixelId     String?
+  metaAccessToken String?
+  metaGraphVersion String @default("v21.0")
+  metaTestCode    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AppSettings {
+  id            String   @id @default("default")
+
+  companyName   String   @default("Checkout Digital")
+  supportEmail  String?
+  supportWhatsapp String?
+  logoUrl       String?
+  footerText    String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AdminUser {
+  id                  String   @id @default(cuid())
+  name                String
+  email               String   @unique
+  passwordHash        String
+  passwordSalt        String
+
+  resetTokenHash      String?
+  resetTokenExpiresAt DateTime?
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  sessions            AdminSession[]
+}
+
+model AdminSession {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  expiresAt DateTime
+
+  userId    String
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+}
