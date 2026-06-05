@@ -72,7 +72,7 @@ export async function PATCH(request: Request) {
 
     const keepCurrentToken =
       body.mercadoPagoAccessToken === "********" ||
-      body.mercadoPagoAccessToken === current.mercadoPagoAccessTokenMasked;
+      body.mercadoPagoAccessToken === maskToken(current.mercadoPagoAccessToken);
 
     const mercadoPagoAccessToken = keepCurrentToken
       ? current.mercadoPagoAccessToken
