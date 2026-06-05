@@ -49,17 +49,22 @@ type CheckoutClientProps = {
 };
 
 type MetaFbq = ((...args: unknown[]) => void) & {
+  callMethod?: (...args: unknown[]) => void;
   queue: unknown[];
   loaded?: boolean;
   version?: string;
   push?: MetaFbq;
-  callMethod?: (...args: unknown[]) => void;
+};
+
+type MetaWindow = Window & {
+  fbq?: MetaFbq;
+  _fbq?: MetaFbq;
 };
 
 declare global {
   interface Window {
-    fbq?: MetaFbq;
-    _fbq?: MetaFbq;
+    fbq?: (...args: unknown[]) => void;
+    _fbq?: unknown;
     MercadoPago?: new (publicKey: string, options?: Record<string, unknown>) => {
       createCardToken: (cardData: Record<string, string>) => Promise<{ id?: string; error?: unknown; message?: string }>;
     };
@@ -105,7 +110,9 @@ const defaultSettings: CheckoutSettings = {
 function installMetaPixel(pixelId: string) {
   if (!pixelId) return false;
 
-  if (!window.fbq) {
+  const metaWindow = window as MetaWindow;
+
+  if (!metaWindow.fbq) {
     const fbq = (function (...args: unknown[]) {
       if (fbq.callMethod) {
         fbq.callMethod(...args);
@@ -120,8 +127,8 @@ function installMetaPixel(pixelId: string) {
     fbq.loaded = true;
     fbq.version = "2.0";
 
-    window.fbq = fbq;
-    window._fbq = fbq;
+    metaWindow.fbq = fbq;
+    metaWindow._fbq = fbq;
 
     const script = document.createElement("script");
     script.async = true;
@@ -131,7 +138,7 @@ function installMetaPixel(pixelId: string) {
     firstScript.parentNode?.insertBefore(script, firstScript);
   }
 
-  window.fbq("init", pixelId);
+  metaWindow.fbq?.("init", pixelId);
   return true;
 }
 
