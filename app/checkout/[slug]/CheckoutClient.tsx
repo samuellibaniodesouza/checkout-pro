@@ -320,24 +320,27 @@ async function getCardPaymentInfo(params: {
   const detectedPaymentMethodId =
     detectedMethod?.id || detectedMethod?.payment_method_id || params.fallbackPaymentMethodId;
 
-  const paymentMethodId =
-    params.paymentMethod === "CARTAO_DEBITO" && !detectedPaymentMethodId.startsWith("deb")
-      ? params.fallbackPaymentMethodId
-      : detectedPaymentMethodId;
+  // CORRECAO-ISSUER-MP: usa o método detectado pelo Mercado Pago e não quebra se issuer não existir.
+  const paymentMethodId = detectedPaymentMethodId;
 
   let issuerId: string | undefined;
 
-  if (params.mercadoPago.getIssuers) {
-    const issuersResponse = await params.mercadoPago.getIssuers({
-      paymentMethodId,
-      bin,
-    });
+  try {
+    if (params.mercadoPago.getIssuers) {
+      const issuersResponse = await params.mercadoPago.getIssuers({
+        paymentMethodId,
+        bin,
+      });
 
-    const issuer = getFirstMercadoPagoResult<MercadoPagoIssuer>(issuersResponse);
+      const issuer = getFirstMercadoPagoResult<MercadoPagoIssuer>(issuersResponse);
 
-    if (issuer?.id !== undefined && issuer?.id !== null) {
-      issuerId = String(issuer.id);
+      if (issuer?.id !== undefined && issuer?.id !== null) {
+        issuerId = String(issuer.id);
+      }
     }
+  } catch (error) {
+    console.warn("CORRECAO-ISSUER-MP: Issuer não encontrado. Continuando sem issuer.", error);
+    issuerId = undefined;
   }
 
   return {
