@@ -48,10 +48,18 @@ type CheckoutClientProps = {
   product: Product;
 };
 
+type MetaFbq = ((...args: unknown[]) => void) & {
+  queue: unknown[];
+  loaded?: boolean;
+  version?: string;
+  push?: MetaFbq;
+  callMethod?: (...args: unknown[]) => void;
+};
+
 declare global {
   interface Window {
-    fbq?: (...args: unknown[]) => void;
-    _fbq?: unknown;
+    fbq?: MetaFbq;
+    _fbq?: MetaFbq;
     MercadoPago?: new (publicKey: string, options?: Record<string, unknown>) => {
       createCardToken: (cardData: Record<string, string>) => Promise<{ id?: string; error?: unknown; message?: string }>;
     };
@@ -98,21 +106,19 @@ function installMetaPixel(pixelId: string) {
   if (!pixelId) return false;
 
   if (!window.fbq) {
-    const fbq = function (...args: unknown[]) {
-      // @ts-expect-error Meta queue
-      fbq.callMethod ? fbq.callMethod(...args) : fbq.queue.push(args);
-    } as typeof window.fbq & {
-      queue?: unknown[];
-      loaded?: boolean;
-      version?: string;
-      push?: typeof window.fbq;
-      callMethod?: (...args: unknown[]) => void;
-    };
+    const fbq = (function (...args: unknown[]) {
+      if (fbq.callMethod) {
+        fbq.callMethod(...args);
+        return;
+      }
 
+      fbq.queue.push(args);
+    }) as MetaFbq;
+
+    fbq.queue = [];
     fbq.push = fbq;
     fbq.loaded = true;
     fbq.version = "2.0";
-    fbq.queue = [];
 
     window.fbq = fbq;
     window._fbq = fbq;
