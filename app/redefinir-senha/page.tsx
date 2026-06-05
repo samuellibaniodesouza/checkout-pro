@@ -1,9 +1,9 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-function ResetPasswordForm() {
+function RedefinirSenhaForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -75,8 +75,16 @@ function ResetPasswordForm() {
 
 export default function RedefinirSenhaPage() {
   return (
-    <Suspense fallback={<div>Carregando...</div>}>
-      <ResetPasswordForm />
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#050505] px-4 text-white">
+          <section className="w-full max-w-md rounded-3xl bg-white p-6 text-center text-zinc-900 shadow-2xl">
+            <p className="font-black">Carregando...</p>
+          </section>
+        </main>
+      }
+    >
+      <RedefinirSenhaForm />
     </Suspense>
   );
 }
